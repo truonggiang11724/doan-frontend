@@ -26,50 +26,50 @@ const Dashboard = () => {
 
       {/* System-wide Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <span className="text-white text-xl">👥</span>
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium opacity-90">Tổng Khách Hàng</p>
+              <p className="text-3xl font-bold">{stats.totalUsers || 0}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Tổng Khách Hàng</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalUsers || 0}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-500 rounded-lg">
-              <span className="text-white text-xl">🏪</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Tổng Người Bán</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalSellers || 0}</p>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-white rounded-full"></div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-500 rounded-lg">
-              <span className="text-white text-xl">📦</span>
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-lg text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium opacity-90">Tổng Người Bán</p>
+              <p className="text-3xl font-bold">{stats.totalSellers || 0}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Tổng Đơn Hàng</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalOrders || 0}</p>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-white rounded-full"></div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-orange-500 rounded-lg">
-              <span className="text-white text-xl">💰</span>
+        <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg shadow-lg text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium opacity-90">Tổng Đơn Hàng</p>
+              <p className="text-3xl font-bold">{stats.totalOrders || 0}</p>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Tổng Doanh Thu</p>
-              <p className="text-2xl font-bold text-gray-900">${Number(stats.totalRevenue || 0).toFixed(0)}</p>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-white rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg shadow-lg text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium opacity-90">Tổng Doanh Thu</p>
+              <p className="text-3xl font-bold">{Number(stats.totalRevenue || 0).toFixed(0)} đ</p>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-white rounded-full"></div>
             </div>
           </div>
         </div>
@@ -106,7 +106,7 @@ const Dashboard = () => {
                       {seller.seller_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                      ${Number(seller.revenue).toFixed(2)}
+                      {Number(seller.revenue).toFixed(2)} đ
                     </td>
                   </tr>
                 ))
@@ -133,7 +133,7 @@ const Dashboard = () => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Doanh Thu']} />
+            <Tooltip formatter={(value) => [`${Number(value).toFixed(2)} đ`, 'Doanh Thu']} />
             <Legend />
             <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
           </LineChart>

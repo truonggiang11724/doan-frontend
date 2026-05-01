@@ -13,6 +13,8 @@ export default function SellerReviews() {
     dispatch(fetchSellerReviews());
   }, [dispatch]);
 
+  console.log(reviews);
+  
   const filteredReviews = ratingFilter === 'all'
     ? reviews
     : reviews.filter((review) => review.rating === parseInt(ratingFilter));
@@ -68,7 +70,7 @@ export default function SellerReviews() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <p className="font-semibold text-gray-900">
-                    {review.customers?.username || 'Anonymous'}
+                    {review.customers?.username || 'Người ẩn danh'}
                   </p>
                   {renderStars(review.rating || 0)}
                 </div>
@@ -81,16 +83,16 @@ export default function SellerReviews() {
               </button>
             </div>
 
-            <p className="text-gray-700 mb-3">{review.comment}</p>
+            <p className="text-gray-700 mb-3">{review.content}</p>
 
             {review.review_media && review.review_media.length > 0 && (
               <div className="grid grid-cols-4 gap-2">
                 {review.review_media.map((media, idx) => (
                   <img
                     key={idx}
-                    src={media.media_url}
+                    src={import.meta.env.VITE_API_URL + media.media_url}
                     alt="Review"
-                    className="w-full h-20 object-cover rounded"
+                    className="w-full h-40 object-cover rounded"
                   />
                 ))}
               </div>

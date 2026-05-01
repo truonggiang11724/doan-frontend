@@ -7,6 +7,8 @@ import adminAuthReducer from './slices/adminAuthSlice';
 import productAdminReducer from './slices/productAdminSlice';
 import orderAdminReducer from './slices/orderAdminSlice';
 import userAdminReducer from './slices/userAdminSlice';
+import sellerAdminReducer from './slices/sellerAdminSlice';
+import promotionAdminReducer from './slices/promotionAdminSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import userReducer from './slices/userSlice';
 import sellerReducer from './slices/sellerSlice';
@@ -23,6 +25,8 @@ export const store = configureStore({
     productAdmin: productAdminReducer,
     orderAdmin: orderAdminReducer,
     userAdmin: userAdminReducer,
+    sellerAdmin: sellerAdminReducer,
+    promotionAdmin: promotionAdminReducer,
     dashboard: dashboardReducer,
     user: userReducer,
     seller: sellerReducer,

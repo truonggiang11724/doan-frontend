@@ -43,7 +43,7 @@ export default function SellerOrders() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
+      <h1 className="text-3xl font-bold text-gray-900">Danh Sách Đơn Hàng</h1>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
