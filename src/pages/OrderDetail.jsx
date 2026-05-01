@@ -13,6 +13,12 @@ export default function OrderDetail() {
   console.log(detail);
   
 
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
+
   useEffect(() => {
     dispatch(fetchOrderById(id));
   }, [dispatch, id]);
@@ -69,11 +75,11 @@ export default function OrderDetail() {
             <img src={import.meta.env.VITE_API_URL + item.product_variants.image_url} className="w-20 h-20 object-cover rounded" />
             <span className="text-gray-700">{item.product_variants.products.product_name}</span>
             </div>
-            <span className="text-gray-700 font-medium">{item.quantity} x ${item.unit_price || item.price || 0}</span>
+            <span className="text-gray-700 font-medium">{item.quantity} x {formatPrice(item.unit_price || item.price || 0)}</span>
           </div>
         ))}
       </div>
-      <div className="mt-4 text-right text-xl font-bold text-gray-900">Tổng cộng: ${total.toFixed(2)}</div>
+      <div className="mt-4 text-right text-xl font-bold text-gray-900">Tổng cộng: {formatPrice(total)}</div>
 
       {/* Action Buttons */}
       <div className="mt-6 flex gap-4 justify-end">

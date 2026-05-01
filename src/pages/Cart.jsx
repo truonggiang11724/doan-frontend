@@ -13,6 +13,11 @@ export default function Cart() {
   const user = JSON.parse(localStorage.getItem('user'));
   console.log(user_cart);
 
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
 
   useEffect(() => {
     if (user) dispatch(getCart(user.user_id));
@@ -72,7 +77,7 @@ export default function Cart() {
           <p className="text-gray-600 mt-2">{user_cart?.cart_items?.length} mục</p>
           <div className="mt-4 flex justify-between font-bold text-lg text-gray-900">
             <span>Tổng cộng:</span>
-            <span>${total ? total.toFixed(2) : 0}</span>
+            <span>{formatPrice(total || 0)}</span>
           </div>
           <button
             onClick={() => navigate('/checkout')}

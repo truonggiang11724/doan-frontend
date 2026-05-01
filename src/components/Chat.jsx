@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
+import { useChat } from '../context/ChatContext.jsx';
 import chatService from '../services/chatService.js';
 
-const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversationId = null }) => {
+const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversationId = null, productImageUrl = '' }) => {
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [error, setError] = useState(null);
+  const [hasSentSuggested, setHasSentSuggested] = useState(false);
   const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const { setSuggestedMessage, setProductImageUrl } = useChat();
 
   const token = localStorage.getItem('token');
   const user = useMemo(() => {
@@ -132,10 +138,59 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
   }, [token, targetPartnerId, initialConversationId]);
 
   useEffect(() => {
-    if (!suggestedMessage) {
+    if (!suggestedMessage || !activeConversation || hasSentSuggested) {
       return;
     }
-    setNewMessage(suggestedMessage);
+
+    const sendSuggestedMessages = async () => {
+      setHasSentSuggested(true);
+      try {
+        // Send text message
+        const textPayload = {
+          conversation_id: activeConversation.conversation_id,
+          content: suggestedMessage,
+          type: 'text',
+        };
+        const textResponse = await chatService.sendMessage(textPayload);
+        setMessages((prev) => [...prev, textResponse.data]);
+
+        // Send image message if productImageUrl exists
+        if (productImageUrl) {
+          const imagePayload = {
+            conversation_id: activeConversation.conversation_id,
+            content: productImageUrl,
+            type: 'image',
+          };
+          const imageResponse = await chatService.sendMessage(imagePayload);
+          setMessages((prev) => [...prev, imageResponse.data]);
+        }
+
+        // Reset to prevent duplicate sends
+        setSuggestedMessage('');
+        setProductImageUrl('');
+        setNewMessage('');
+      } catch (err) {
+        console.error('Failed to send suggested message:', err);
+        // setError('Failed to send suggested message');
+        setSuggestedMessage(''); // Reset to prevent infinite loop
+        setProductImageUrl('');
+        setHasSentSuggested(false);
+      }
+    };
+
+    sendSuggestedMessages();
+  }, [suggestedMessage, activeConversation, productImageUrl, hasSentSuggested]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (suggestedMessage) {
+      setHasSentSuggested(false);
+    }
   }, [suggestedMessage]);
 
   useEffect(() => {
@@ -161,7 +216,7 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
   };
 
   const loadMessages = async (conversation) => {
-    setLoading(true);
+    setLoadingMessages(true);
     try {
       const response = await chatService.getMessages(conversation.conversation_id);
       setMessages(response.data || []);
@@ -178,39 +233,32 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
     } catch (err) {
       setError('Unable to load messages');
     } finally {
-      setLoading(false);
+      setLoadingMessages(false);
     }
   };
 
-  const sendMessage = () => {
-    const trimmed = newMessage.trim();
-    if (!trimmed || !activeConversation || !socketRef.current) {
+  const sendMessage = async (content = newMessage, type = 'text') => {
+    if (!content.trim() || !activeConversation) {
       return;
     }
 
     const payload = {
       conversation_id: activeConversation.conversation_id,
-      content: trimmed,
-      type: 'text',
+      content: content.trim(),
+      type,
     };
 
-    socketRef.current.emit('sendMessage', payload);
+    try {
+      const response = await chatService.sendMessage(payload);
+      const savedMessage = response.data;
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        ...payload,
-        message_id: Date.now(),
-        sender: {
-          user_id: user.user_id,
-          username: user.username,
-          avatar_url: user.avatar_url,
-        },
-        is_read: true,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-    setNewMessage('');
+      setMessages((prev) => [...prev, savedMessage]);
+      if (type === 'text') {
+        setNewMessage('');
+      }
+    } catch (err) {
+      setError('Failed to send message');
+    }
   };
 
   const renderParticipant = (conversation) => {
@@ -224,10 +272,10 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
 
   return (
     <div className="flex h-full">
-      <aside className="w-80 border-r border-slate-200 p-4 bg-white">
-        <h2 className="text-xl font-semibold mb-4">Conversations</h2>
+      <aside className="w-40 border-r border-slate-200 p-4 bg-white">
+        <h2 className="text-xl font-semibold mb-4">Tin nhắn</h2>
         {loading && !conversations.length ? (
-          <p>Loading conversations...</p>
+          <p>Đang tải...</p>
         ) : (
           <div className="space-y-2">
             {conversations.map((conversation) => (
@@ -267,7 +315,9 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
 
         <section className="flex-1 overflow-y-auto p-4">
           {activeConversation ? (
-            messages.length ? (
+            loadingMessages ? (
+              <div className="text-slate-500">Loading messages...</div>
+            ) : messages.length ? (
               <div className="space-y-3">
                 {messages.map((message) => (
                   <div
@@ -277,13 +327,18 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
                     <div className={`rounded-2xl p-3 max-w-[70%] ${
                       message.sender.user_id === user.user_id ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'
                     }`}>
-                      <p>{message.content}</p>
-                      <span className="text-[11px] text-slate-500 mt-1 block text-right">
+                      {message.type === 'image' ? (
+                        <img src={message.content} alt="Shared product" className="max-w-full rounded" />
+                      ) : (
+                        <p>{message.content}</p>
+                      )}
+                      <span className="text-[11px] text-slate-500 mt-1 block text-right text-white">
                         {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
             ) : (
               <div className="text-slate-500">No messages in this conversation yet.</div>

@@ -2,13 +2,13 @@ import { useChat } from '../context/ChatContext.jsx';
 import Chat from './Chat.jsx';
 
 const ChatWidget = () => {
-  const { isOpen, setIsOpen, closeChat, suggestedMessage, targetPartnerId, initialConversationId } = useChat();
+  const { isOpen, setIsOpen, closeChat, suggestedMessage, targetPartnerId, initialConversationId, productImageUrl } = useChat();
   const token = localStorage.getItem('token');
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
       {isOpen && (
-        <div className="w-[380px] h-[600px] bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="w-[580px] h-[600px] bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 bg-slate-800 text-white">
             <div>
               <p className="font-semibold">Khung chat</p>
@@ -28,6 +28,7 @@ const ChatWidget = () => {
                 suggestedMessage={suggestedMessage}
                 targetPartnerId={targetPartnerId}
                 initialConversationId={initialConversationId}
+                productImageUrl={productImageUrl}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-slate-700">

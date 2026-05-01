@@ -6,6 +6,7 @@ import { addToCart, getCart } from '../store/slices/cartSlice';
 import LoadingSpinner from '../components/LoadingSpinner';
 import mockupService from '../services/mockupService';
 import { useChat } from '../context/ChatContext.jsx';
+import { toast } from 'react-toastify';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -22,6 +23,12 @@ export default function ProductDetail() {
     render_id: null
   });
 
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
+
   // POD states
   const [uploadFile, setUploadFile] = useState(null);
   const [designImageUrl, setDesignImageUrl] = useState('');
@@ -30,6 +37,12 @@ export default function ProductDetail() {
   const [isRending, setIsRendering] = useState(false);
   const [renderError, setRenderError] = useState(null);
   const [mockupTemplate, setMockupTemplate] = useState(null);
+
+  // UI states
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const [showMockupModal, setShowMockupModal] = useState(false);
+  const [selectedMainImage, setSelectedMainImage] = useState(null);
+  const [isUploadingDesign, setIsUploadingDesign] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProductById(id));
@@ -62,7 +75,11 @@ export default function ProductDetail() {
   if (!product) return null;
 
   const price = product.product_variants?.[0]?.price || product.price || 0;
-  const images = product.product_media?.map((m) => import.meta.env.VITE_API_URL + m.media_url).filter(Boolean) || [];
+  const images = [
+    ...(product.product_media?.map((m) => import.meta.env.VITE_API_URL + m.media_url).filter(Boolean) || []),
+    ...(product.product_variants?.map((v) => import.meta.env.VITE_API_URL + v.image_url).filter(Boolean) || [])
+  ];
+  const mainImage = selectedMainImage || images[0] || '';
 
   const handleAddItem = () => {
     if (!user) {
@@ -77,7 +94,13 @@ export default function ProductDetail() {
     if (renderId) {
       itemData.render_id = renderId;
     }
-    dispatch(addToCart(itemData));
+    dispatch(addToCart(itemData)).then((result) => {
+      if (result.meta.requestStatus === 'fulfilled') {
+        toast.success('Đã thêm sản phẩm vào giỏ hàng!');
+      } else {
+        toast.error('Không thể thêm sản phẩm vào giỏ hàng. Vui lòng thử lại.');
+      }
+    });
   }
 
   // Handle file upload
@@ -87,15 +110,34 @@ export default function ProductDetail() {
 
     setUploadFile(file);
     setRenderError(null);
+    setIsUploadingDesign(true);
+    
+    try {
+      const uploadRes = await mockupService.uploadDesign(file);
+      const uploadedUrl = import.meta.env.VITE_API_URL + (uploadRes.data?.data?.url || uploadRes.data?.url);
+      console.log(uploadedUrl);
+      
+      
+      if (uploadedUrl) {
+        setDesignImageUrl(uploadedUrl);
+      } else {
+        setRenderError('Không thể upload file hình ảnh');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setRenderError('Lỗi upload hình ảnh: ' + (error?.response?.data?.message || error.message));
+    } finally {
+      setIsUploadingDesign(false);
+    }
   };
 
   // Handle mockup render
   const handleRenderMockup = async () => {
     let imageUrl = designImageUrl?.trim();
     
-    // Check if using file or URL
-    if (!imageUrl && !uploadFile) {
-      alert('Vui lòng chọn file hình ảnh hoặc nhập URL hình ảnh');
+    // Check if we have image URL
+    if (!imageUrl) {
+      alert('Vui lòng tải lên hình ảnh hoặc nhập URL hình ảnh');
       return;
     }
     
@@ -107,20 +149,6 @@ export default function ProductDetail() {
     try {
       setIsRendering(true);
       setRenderError(null);
-
-      // If using file, upload it first
-      if (uploadFile && !imageUrl) {
-        const uploadRes = await mockupService.uploadDesign(uploadFile);
-        imageUrl = uploadRes.data?.data?.url || uploadRes.data?.url;
-
-        if (!imageUrl) {
-          throw new Error('Không thể upload file hình ảnh');
-        }
-      } else if (!imageUrl) {
-        throw new Error('Không có hình ảnh để render');
-      }
-      console.log(JSON.parse(mockupTemplate.smart_objects));
-      
 
       // Render mockup
       const renderRes = await mockupService.renderMockup({
@@ -150,21 +178,45 @@ export default function ProductDetail() {
       <button onClick={() => navigate(-1)} className="text-sm text-gray-700 hover:text-gray-900 underline">&larr; Quay lại</button>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         <div className="space-y-3">
-          {images.length ? (
-            <img src={images[0]} alt={product.product_name} className="w-full h-80 object-cover rounded-lg" />
+          {mainImage ? (
+            <img src={mainImage} alt={product.product_name} className="w-full h-120 object-cover rounded-lg" />
           ) : (
             <div className="w-full h-80 bg-gray-200 rounded-lg" />
           )}
           <div className="flex gap-3 overflow-x-auto">
             {images.map((src, idx) => (
-              <img key={idx} src={src} alt={`thumb-${idx}`} className="w-20 h-20 object-cover rounded cursor-pointer" />
+              <img 
+                key={idx} 
+                src={src} 
+                alt={`thumb-${idx}`} 
+                onClick={() => setSelectedMainImage(src)}
+                className={`w-20 h-20 object-cover rounded cursor-pointer transition ${mainImage === src ? 'ring-2 ring-blue-500' : ''}`} 
+              />
             ))}
           </div>
         </div>
         <section>
           <h1 className="text-3xl font-bold text-gray-900">{product.product_name || product.name}</h1>
-          <p className="text-gray-800 text-2xl font-bold mt-2">${Number(price).toFixed(2)}</p>
-          <p className="text-gray-600 mt-3">{product.description || 'Không có mô tả.'}</p>
+          <p className="text-gray-800 text-2xl font-bold mt-2">{formatPrice(price)}</p>
+          <div className="text-gray-600 mt-3">
+            {(() => {
+              const desc = product.description || 'Không có mô tả.';
+              const shortDesc = desc.length > 100 ? desc.substring(0, 100) + '...' : desc;
+              return (
+                <>
+                  {showFullDesc ? desc : shortDesc}
+                  {desc.length > 100 && (
+                    <button 
+                      onClick={() => setShowFullDesc(!showFullDesc)} 
+                      className="text-blue-600 ml-2 hover:underline"
+                    >
+                      {showFullDesc ? 'Thu gọn' : 'Xem thêm'}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>
 
           <div className="mt-4 space-y-3">
             <div>
@@ -180,6 +232,10 @@ export default function ProductDetail() {
                   }`}
                   onClick={() => {
                     setAddForm({...addForm, variant_id: variant.variant_id});
+                    // Set main image to variant's image
+                    if (variant.image_url) {
+                      setSelectedMainImage(import.meta.env.VITE_API_URL + variant.image_url);
+                    }
                   }} >
                     {'Màu ' + variant.color + ' - Size ' + variant.size}
                   </span>
@@ -193,68 +249,14 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* POD Section */}
+            {/* POD Button */}
             {product?.categories?.name?.toLowerCase() === 'pod' && (
-              <div className="border-t pt-4 mt-4">
-                <h3 className="font-medium text-gray-900 mb-3">Thiết kế của bạn (POD)</h3>
-                
-                {/* Upload File */}
-                <div className="space-y-2 mb-4">
-                  <label className="block text-sm text-gray-700">Tải lên hình ảnh thiết kế</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadFile}
-                    className="block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                  />
-                  {uploadFile && <p className="text-sm text-gray-600">✓ {uploadFile.name}</p>}
-                </div>
-
-                {/* OR Separator */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                  <span className="text-sm text-gray-500">hoặc</span>
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                </div>
-
-                {/* URL Input */}
-                <div className="space-y-2 mb-4">
-                  <label className="block text-sm text-gray-700">Nhập URL hình ảnh thiết kế</label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    value={designImageUrl}
-                    onChange={(e) => {
-                      setDesignImageUrl(e.target.value);
-                      if (uploadFile) setUploadFile(null);
-                    }}
-                    className="block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 focus:border-gray-500 focus:outline-none"
-                  />
-                  {designImageUrl && <p className="text-sm text-gray-600">✓ URL đã nhập</p>}
-                </div>
-
-                {/* Render Button */}
-                <button
-                  onClick={handleRenderMockup}
-                  disabled={(!uploadFile && !designImageUrl?.trim()) || isRending || !mockupTemplate}
-                  className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium mb-4"
-                >
-                  {isRending ? 'Đang render...' : 'Xem trước render'}
-                </button>
-
-                {/* Error Message */}
-                {renderError && (
-                  <p className="text-red-600 text-sm mb-3">{renderError}</p>
-                )}
-
-                {/* Preview Render */}
-                {renderImage && (
-                  <div className="border rounded p-3 bg-gray-50">
-                    <p className="text-sm text-gray-700 mb-2">✓ Hình ảnh render</p>
-                    <img src={renderImage} alt="Mockup render" className="w-full rounded" />
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => setShowMockupModal(true)}
+                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-medium transition"
+              >
+                Thiết kế sản phẩm
+              </button>
             )}
 
             <div className="flex items-center gap-3">
@@ -275,9 +277,10 @@ export default function ProductDetail() {
                   return;
                 }
                 const productLabel = product.product_name || product.name || 'sản phẩm này';
-                const suggested = `Xin chào, tôi đang xem sản phẩm "${productLabel}" với giá $${Number(price).toFixed(2)}. Tôi muốn hỏi thêm về sản phẩm này.`;
+                const suggested = `Xin chào, tôi đang xem sản phẩm "${productLabel}" với giá ${formatPrice(price)}. Tôi muốn hỏi thêm về sản phẩm này.`;
                 const sellerId = product.seller_id || product.sellers?.user_id || null;
-                openChat(suggested, sellerId);
+                const imageUrl = images[0] || '';
+                openChat(suggested, sellerId, null, imageUrl);
               }}
               className="w-full mt-3 border border-blue-600 text-blue-600 py-3 rounded-lg hover:bg-blue-50 font-medium transition"
             >
@@ -286,6 +289,78 @@ export default function ProductDetail() {
           </div>
         </section>
       </div>
+
+      {/* Mockup Modal */}
+      {showMockupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Thiết kế của bạn (POD)</h3>
+              <button onClick={() => setShowMockupModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div className="space-y-4">
+              {/* Upload File */}
+              <div className="space-y-2">
+                <label className="block text-sm text-gray-700">Tải lên hình ảnh thiết kế</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleUploadFile}
+                  disabled={isUploadingDesign}
+                  className="block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {isUploadingDesign && <p className="text-sm text-gray-600">Đang upload...</p>}
+                {uploadFile && <p className="text-sm text-gray-600">✓ {uploadFile.name}</p>}
+              </div>
+
+              {/* OR Separator */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-gray-300"></div>
+                <span className="text-sm text-gray-500">hoặc</span>
+                <div className="flex-1 h-px bg-gray-300"></div>
+              </div>
+
+              {/* URL Input */}
+              <div className="space-y-2">
+                <label className="block text-sm text-gray-700">Nhập URL hình ảnh thiết kế</label>
+                <input
+                  type="url"
+                  placeholder="https://example.com/image.jpg"
+                  value={designImageUrl}
+                  onChange={(e) => {
+                    setDesignImageUrl(e.target.value);
+                    setUploadFile(null);
+                  }}
+                  className="block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 focus:border-gray-500 focus:outline-none"
+                />
+                {designImageUrl && <p className="text-sm text-gray-600">✓ URL đã nhập</p>}
+              </div>
+
+              {/* Render Button */}
+              <button
+                onClick={handleRenderMockup}
+                disabled={!designImageUrl?.trim() || isRending || !mockupTemplate}
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
+              >
+                {isRending ? 'Đang render...' : 'Xem trước render'}
+              </button>
+
+              {/* Error Message */}
+              {renderError && (
+                <p className="text-red-600 text-sm">{renderError}</p>
+              )}
+
+              {/* Preview Render */}
+              {renderImage && (
+                <div className="border rounded p-3 bg-gray-50">
+                  <p className="text-sm text-gray-700 mb-2">✓ Hình ảnh render</p>
+                  <img src={renderImage} alt="Mockup render" className="w-full rounded" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

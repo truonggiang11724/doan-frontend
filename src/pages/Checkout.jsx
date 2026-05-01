@@ -11,6 +11,11 @@ export default function Checkout() {
   const navigate = useNavigate();
   const user = useMemo(() => JSON.parse(localStorage.getItem('user') || '{}'), []);
   const { user_cart } = useSelector((state) => state.cart);
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
   const [addresses, setAddresses] = useState([]);
   const [wardDetails, setWardDetails] = useState({});
   const [provinces, setProvinces] = useState([]);
@@ -355,15 +360,15 @@ export default function Checkout() {
 
         <div className="flex justify-between text-lg font-semibold">
           <span>Tổng tiền đơn hàng</span>
-          <span>${total ? total.toFixed(2) : 0}</span>
+          <span>{formatPrice(total || 0)}</span>
         </div>
         <div className="flex justify-between text-lg font-semibold">
           <span>Giảm giá</span>
-          <span>${total ? (total * discount).toFixed(2) : 0}</span>
+          <span>{formatPrice(total ? (total * discount) : 0)}</span>
         </div>
         <div className="flex justify-between text-xl font-bold">
           <span>Tổng tiền cần thanh toán</span>
-          <span>${grandTotal ? grandTotal.toFixed(2) : 0}</span>
+          <span>{formatPrice(grandTotal || 0)}</span>
         </div>
         <div>
           <span style={{color: "red"}}>Lưu ý: Số tiền trên chưa bao gồm phí ship. Nhân viên sẽ liên hệ thông báo phí ship sau khi xác nhận đơn hàng.</span>

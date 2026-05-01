@@ -5,6 +5,12 @@ export default function ProductCard({ product }) {
   const thumbnail = product.product_media?.[0]?.media_url ? import.meta.env.VITE_API_URL + product.product_media?.[0]?.media_url : 'https://via.placeholder.com/240x220';
   const navigate = useNavigate();
 
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition overflow-hidden">
       <Link to={`/products/${product.product_id || product.id}`} className="block">
@@ -14,7 +20,7 @@ export default function ProductCard({ product }) {
         <Link to={`/products/${product.product_id || product.id}`}>
           <h3 className="font-semibold text-base h-14 overflow-hidden text-gray-900">{product.product_name || product.name}</h3>
         </Link>
-        <p className="text-gray-800 text-lg font-bold mt-1">${Number(price).toFixed(2)}</p>
+        <p className="text-gray-800 text-lg font-bold mt-1">{formatPrice(price)}</p>
         <button
           type="button"
           onClick={() => navigate(`/products/${product.product_id || product.id}`)}

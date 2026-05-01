@@ -9,6 +9,12 @@ export default function Orders() {
   const { list, status, error } = useSelector((state) => state.orders);
   const user = useSelector((state) => state.user?.user);
 
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
+
   // Fetch orders when user is authenticated
   useEffect(() => {
     if (user) {
@@ -30,7 +36,7 @@ export default function Orders() {
               <p className="text-gray-900 font-medium">Đơn hàng #{order.order_id || order.id}</p>
               <p className="font-medium text-gray-700">{order.order_status || 'Chờ xử lý'}</p>
             </div>
-            <p className="text-sm text-gray-500">Tổng cộng: ${Number(order.total_amount || order.total || 0).toFixed(2)}</p>
+            <p className="text-sm text-gray-500">Tổng cộng: {formatPrice(Number(order.total_amount || order.total || 0))}</p>
             <p className="text-sm text-gray-500">Ngày đặt hàng: {order.created_at.toLocaleString('vi-VN', {
               year: 'numeric', month: '2-digit', day: '2-digit',
               hour: '2-digit', minute: '2-digit', second: '2-digit'

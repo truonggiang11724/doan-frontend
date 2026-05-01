@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <main className="max-w-6xl mx-auto p-4">
       <section className="rounded-xl bg-gradient-to-r from-gray-700 to-gray-900 text-white p-8 mb-6">
-        <h1 className="text-3xl md:text-5xl font-black">Fashion Store</h1>
+        <h1 className="text-3xl md:text-5xl font-black">Teezone Store</h1>
         <p className="mt-2 text-sm md:text-base text-gray-200">Tìm kiếm phong cách yêu thích của bạn với các giảm giá độc quyền!</p>
       </section>
 

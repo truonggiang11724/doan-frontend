@@ -9,6 +9,12 @@ const OrderDetail = () => {
   const dispatch = useDispatch();
   const { detail, loading, error } = useSelector((state) => state.orderAdmin);
 
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price * 25000; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
+
   useEffect(() => {
     if (id) {
       dispatch(fetchOrderDetail(id));
@@ -59,7 +65,7 @@ const OrderDetail = () => {
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{item.product?.name}</h3>
                   <p className="text-sm text-gray-500">Số Lượng: {item.quantity}</p>
-                  <p className="text-sm font-medium text-gray-900">${item.price}</p>
+                  <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)}</p>
                 </div>
               </div>
             ))}
@@ -67,7 +73,7 @@ const OrderDetail = () => {
           <div className="mt-4 pt-4 border-t">
             <div className="flex justify-between text-lg font-medium">
               <span>Tổng Cộng:</span>
-              <span>${detail.total_amount || 0}</span>
+              <span>{formatPrice(detail.total_amount || 0)}</span>
             </div>
           </div>
         </div>

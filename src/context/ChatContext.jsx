@@ -7,11 +7,13 @@ export const ChatProvider = ({ children }) => {
   const [suggestedMessage, setSuggestedMessage] = useState('');
   const [initialConversationId, setInitialConversationId] = useState(null);
   const [targetPartnerId, setTargetPartnerId] = useState(null);
+  const [productImageUrl, setProductImageUrl] = useState('');
 
-  const openChat = (message = '', partnerId = null, conversationId = null) => {
+  const openChat = (message = '', partnerId = null, conversationId = null, imageUrl = '') => {
     setSuggestedMessage(message);
     setTargetPartnerId(partnerId);
     setInitialConversationId(conversationId);
+    setProductImageUrl(imageUrl);
     setIsOpen(true);
   };
 
@@ -20,6 +22,7 @@ export const ChatProvider = ({ children }) => {
     setSuggestedMessage('');
     setInitialConversationId(null);
     setTargetPartnerId(null);
+    setProductImageUrl('');
   };
 
   return (
@@ -31,6 +34,7 @@ export const ChatProvider = ({ children }) => {
         suggestedMessage,
         initialConversationId,
         targetPartnerId,
+        productImageUrl,
         setIsOpen,
       }}
     >

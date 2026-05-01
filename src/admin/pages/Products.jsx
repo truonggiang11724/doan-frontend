@@ -17,6 +17,13 @@ const Products = () => {
   const admin = JSON.parse(localStorage.getItem("admin"));
   const seller = JSON.parse(localStorage.getItem("seller"));
   const { categories } = useSelector((state) => state.products);
+
+  // Function to format price to VND
+  const formatPrice = (price) => {
+    const vndPrice = price * 25000; // Assuming 1 USD = 25,000 VND
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(vndPrice);
+  };
+
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
@@ -176,9 +183,9 @@ const Products = () => {
       if (pv.price < min) min = pv.price;
       if (pv.price > max) max = pv.price;
     });
-    if (min == max) return min;
+    if (min == max) return formatPrice(min);
     if (min > max) return 'Đã bán hết';
-    return min + ' - ' + max;
+    return formatPrice(min) + ' - ' + formatPrice(max);
   }
 
   const columns = [
