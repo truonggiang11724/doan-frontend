@@ -14,7 +14,7 @@ export default function ProductCard({ product }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition overflow-hidden">
       <Link to={`/products/${product.product_id || product.id}`} className="block">
-        <img src={thumbnail} alt={product.product_name || product.name} className="w-full h-52 object-cover" />
+        <img src={thumbnail} alt={product.product_name || product.name} className="w-full h-80 object-cover" />
       </Link>
       <div className="p-3">
         <Link to={`/products/${product.product_id || product.id}`}>

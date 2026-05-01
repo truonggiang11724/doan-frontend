@@ -19,6 +19,8 @@ export default function Footer() {
               <li><a href="#" className="hover:text-white">Theo dõi đơn hàng</a></li>
               <li><a href="#" className="hover:text-white">Trả hàng</a></li>
               <li><a href="#" className="hover:text-white">Câu hỏi thường gặp</a></li>
+              <li><Link to="/seller/login" className="hover:text-white">Đăng nhập Người bán</Link></li>
+              <li><Link to="/admin/login" className="hover:text-white">Quản trị</Link></li>
             </ul>
           </div>
           <div>

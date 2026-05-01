@@ -10,6 +10,30 @@ export const fetchProducts = createAsyncThunk('products/fetchProducts', async (_
   }
 });
 
+export const fetchTopSellingProducts = createAsyncThunk(
+  'products/fetchTopSellingProducts',
+  async (_, {rejectWithValue}) => {
+    try {
+      const response = await api.get('/products/top-selling');
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err?.response?.data || { message: 'Cannot fetch top selling products' });
+    }
+  },
+);
+
+export const fetchSimilarProducts = createAsyncThunk(
+  'products/fetchSimilarProducts',
+  async (productId, {rejectWithValue}) => {
+    try {
+      const response = await api.get(`/products/${productId}/similar`);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err?.response?.data || { message: 'Cannot fetch similar products' });
+    }
+  },
+);
+
 export const fetchProductById = createAsyncThunk('products/fetchProductById', async (id, {rejectWithValue}) => {
   try {
     const response = await api.get(`/products/${id}`);
@@ -59,12 +83,18 @@ const productSlice = createSlice({
   name: 'products',
   initialState: {
     items: [],
+    topSelling: [],
+    similar: [],
     detail: null,
     categories: [],
     status: 'idle',
+    topSellingStatus: 'idle',
+    similarStatus: 'idle',
     detailStatus: 'idle',
     categoriesStatus: 'idle',
     error: null,
+    topSellingError: null,
+    similarError: null,
     detailError: null,
   },
   reducers: {
@@ -87,6 +117,30 @@ const productSlice = createSlice({
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload?.message || 'Failed to get products';
+      })
+      .addCase(fetchTopSellingProducts.pending, (state) => {
+        state.topSellingStatus = 'loading';
+        state.topSellingError = null;
+      })
+      .addCase(fetchTopSellingProducts.fulfilled, (state, action) => {
+        state.topSellingStatus = 'succeeded';
+        state.topSelling = action.payload;
+      })
+      .addCase(fetchTopSellingProducts.rejected, (state, action) => {
+        state.topSellingStatus = 'failed';
+        state.topSellingError = action.payload?.message || 'Failed to get top selling products';
+      })
+      .addCase(fetchSimilarProducts.pending, (state) => {
+        state.similarStatus = 'loading';
+        state.similarError = null;
+      })
+      .addCase(fetchSimilarProducts.fulfilled, (state, action) => {
+        state.similarStatus = 'succeeded';
+        state.similar = action.payload;
+      })
+      .addCase(fetchSimilarProducts.rejected, (state, action) => {
+        state.similarStatus = 'failed';
+        state.similarError = action.payload?.message || 'Failed to get similar products';
       })
       .addCase(fetchProductById.pending, (state) => {
         state.detailStatus = 'loading';

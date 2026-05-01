@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import MainLayout from './components/MainLayout';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { ChatProvider } from './context/ChatContext.jsx';
@@ -53,89 +54,65 @@ export default function App() {
           <Routes>
           {/* Customer Routes */}
           <Route path="/" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <Home />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/products" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <Products />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/products/:id" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ProductDetail />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/cart" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <Cart />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/checkout" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ProtectedRoute><Checkout /></ProtectedRoute>
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/payment-return" element={<PaymentReturn />} />
           <Route path="/login" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <Login />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/register" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <Register />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/reset-password" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ResetPassword />
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/profile" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ProtectedRoute><Profile /></ProtectedRoute>
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/orders" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ProtectedRoute><Orders /></ProtectedRoute>
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/orders/:id" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ProtectedRoute><OrderDetail /></ProtectedRoute>
-              <Footer />
-            </>
+            </MainLayout>
           } />
           <Route path="/mockup-generator" element={
-            <>
-              <Navbar />
+            <MainLayout>
               <ProtectedRoute><MockupGenerator /></ProtectedRoute>
-              <Footer />
-            </>
+            </MainLayout>
           } />
 
           {/* Seller Routes */}

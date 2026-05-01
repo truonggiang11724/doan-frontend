@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
-import { fetchProductById, clearDetail } from '../store/slices/productSlice';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { fetchProductById, clearDetail, fetchSimilarProducts } from '../store/slices/productSlice';
 import { addToCart, getCart } from '../store/slices/cartSlice';
 import LoadingSpinner from '../components/LoadingSpinner';
 import mockupService from '../services/mockupService';
+import viewedProductsService from '../services/viewedProductsService';
 import { useChat } from '../context/ChatContext.jsx';
 import { toast } from 'react-toastify';
 
@@ -12,7 +13,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { detail: product, detailStatus, detailError } = useSelector((state) => state.products);
+  const { detail: product, detailStatus, detailError, similar, similarStatus } = useSelector((state) => state.products);
   const [qty, setQty] = useState(1);
 
   const { openChat } = useChat();
@@ -49,6 +50,14 @@ export default function ProductDetail() {
     return () => { dispatch(clearDetail()); };
   }, [dispatch, id]);
 
+  // Ghi log sản phẩm đã xem
+  useEffect(() => {
+    if (product && product.product_id) {
+      viewedProductsService.addViewedProduct(product);
+      dispatch(fetchSimilarProducts(product.product_id));
+    }
+  }, [product, dispatch]);
+
   // Fetch mockup template khi variant thay đổi (cho POD)
   useEffect(() => {
     const isPod = product?.categories?.name?.toLowerCase() === 'pod';
@@ -80,6 +89,17 @@ export default function ProductDetail() {
     ...(product.product_variants?.map((v) => import.meta.env.VITE_API_URL + v.image_url).filter(Boolean) || [])
   ];
   const mainImage = selectedMainImage || images[0] || '';
+
+  const reviewCount = product.reviews?.length || 0;
+  const averageRating = reviewCount > 0
+    ? (product.reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviewCount).toFixed(1)
+    : 0;
+
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <span key={index} className={index < rating ? 'text-yellow-400' : 'text-gray-300'}>★</span>
+    ));
+  };
 
   const handleAddItem = () => {
     if (!user) {
@@ -290,6 +310,59 @@ export default function ProductDetail() {
         </section>
       </div>
 
+      <section className="mt-10 bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">Đánh giá sản phẩm</h2>
+            <p className="mt-2 text-sm text-gray-500">{reviewCount > 0 ? `${reviewCount} đánh giá từ khách hàng thực tế` : 'Chưa có đánh giá nào cho sản phẩm này.'}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-4xl font-bold text-gray-900">{averageRating}</p>
+              <p className="text-sm text-gray-500">điểm trung bình</p>
+            </div>
+            <div className="flex items-center gap-1 text-lg">
+              {renderStars(Math.round(Number(averageRating)))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {reviewCount > 0 ? (
+            product.reviews.map((review) => (
+              <div key={review.review_id} className="rounded-3xl border border-gray-100 bg-slate-50 p-5 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div>
+                    <p className="font-semibold text-gray-900">{review.customers?.username || 'Khách hàng ẩn danh'}</p>
+                    <p className="text-sm text-gray-500">{new Date(review.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-400 text-lg">
+                    {renderStars(review.rating || 0)}
+                  </div>
+                </div>
+                <p className="text-gray-700 leading-relaxed">{review.content || 'Không có nội dung đánh giá.'}</p>
+                {review.review_media && review.review_media.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {review.review_media.map((media) => (
+                      <img
+                        key={media.id}
+                        src={media.media_url?.startsWith('http') ? media.media_url : import.meta.env.VITE_API_URL + media.media_url}
+                        alt="Review"
+                        className="h-40 w-full rounded-3xl object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="rounded-3xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500">
+              <p className="font-medium">Sản phẩm này chưa có đánh giá, bạn có thể là người đầu tiên.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Mockup Modal */}
       {showMockupModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -361,6 +434,67 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+
+      {/* Sản phẩm tương tự */}
+      {similar && similar.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Sản phẩm tương tự</h2>
+          {similarStatus === 'loading' && <LoadingSpinner message="Đang tải sản phẩm tương tự..." />}
+          {similarStatus === 'failed' && <p className="text-red-600">Không thể tải sản phẩm tương tự</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {similar.slice(0, 4).map((simProduct) => (
+              <div key={simProduct.product_id || simProduct.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                <Link to={`/products/${simProduct.product_id || simProduct.id}`} className="block">
+                  <img
+                    src={simProduct.product_media?.[0]?.media_url ? import.meta.env.VITE_API_URL + simProduct.product_media[0].media_url : 'https://via.placeholder.com/300x300'}
+                    alt={simProduct.product_name || simProduct.name}
+                    className="w-full h-48 object-cover"
+                  />
+                </Link>
+                <div className="p-4">
+                  <Link to={`/products/${simProduct.product_id || simProduct.id}`}>
+                    <h3 className="font-semibold text-gray-900 text-sm h-10 overflow-hidden">{simProduct.product_name || simProduct.name}</h3>
+                  </Link>
+                  <p className="text-gray-800 font-bold mt-2">{formatPrice(simProduct.product_variants?.[0]?.price || simProduct.price || 0)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Đã xem gần đây */}
+      {(() => {
+        const viewedProducts = viewedProductsService.getViewedProducts();
+        const recentViewed = viewedProducts.filter(p => (p.product_id || p.id) !== (product?.product_id || product?.id)).slice(0, 4);
+        if (recentViewed.length === 0) return null;
+
+        return (
+          <section className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Đã xem gần đây</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recentViewed.map((viewedProduct) => (
+                <div key={viewedProduct.product_id || viewedProduct.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                  <Link to={`/products/${viewedProduct.product_id || viewedProduct.id}`} className="block">
+                    <img
+                      src={viewedProduct.product_media?.[0]?.media_url ? import.meta.env.VITE_API_URL + viewedProduct.product_media[0].media_url : 'https://via.placeholder.com/300x300'}
+                      alt={viewedProduct.product_name || viewedProduct.name}
+                      className="w-full h-48 object-cover"
+                    />
+                  </Link>
+                  <div className="p-4">
+                    <Link to={`/products/${viewedProduct.product_id || viewedProduct.id}`}>
+                      <h3 className="font-semibold text-gray-900 text-sm h-10 overflow-hidden">{viewedProduct.product_name || viewedProduct.name}</h3>
+                    </Link>
+                    <p className="text-gray-800 font-bold mt-2">{formatPrice(viewedProduct.product_variants?.[0]?.price || viewedProduct.price || 0)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
+
     </main>
   );
 }

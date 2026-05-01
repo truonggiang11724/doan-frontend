@@ -309,14 +309,14 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
       <main className="flex-1 flex flex-col bg-slate-50">
         <div className="border-b border-slate-200 px-4 py-4 bg-white">
           <h2 className="text-xl font-semibold">
-            {activeConversation ? renderParticipant(activeConversation) : 'Select a conversation'}
+            {activeConversation ? renderParticipant(activeConversation) : ''}
           </h2>
         </div>
 
         <section className="flex-1 overflow-y-auto p-4">
           {activeConversation ? (
             loadingMessages ? (
-              <div className="text-slate-500">Loading messages...</div>
+              <div className="text-slate-500">Đang tải...</div>
             ) : messages.length ? (
               <div className="space-y-3">
                 {messages.map((message) => (
@@ -341,10 +341,10 @@ const Chat = ({ suggestedMessage = '', targetPartnerId = null, initialConversati
                 <div ref={messagesEndRef} />
               </div>
             ) : (
-              <div className="text-slate-500">No messages in this conversation yet.</div>
+              <div className="text-slate-500">Chưa có tin nhắn.</div>
             )
           ) : (
-            <div className="text-slate-500">Choose a conversation to see messages.</div>
+            <div className="text-slate-500">Xem một đoạn chat.</div>
           )}
         </section>
 

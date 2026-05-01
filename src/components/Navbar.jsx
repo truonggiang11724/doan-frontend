@@ -49,7 +49,6 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <NavLink to="/login" className="hover:text-gray-900">Đăng nhập</NavLink>
-              <NavLink to="/seller/login" className="hover:text-gray-900">Seller login</NavLink>
               <NavLink to="/register" className="hover:text-gray-900">Đăng kí</NavLink>
             </div>
           )}
