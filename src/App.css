@@ -1,0 +1,14 @@
+/* migration file for Tailwind-based layout. */
+
+body {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
