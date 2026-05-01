@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white border-t border-gray-800 mt-10">
@@ -33,6 +35,7 @@ export default function Footer() {
               <li><a href="#" className="hover:text-white">Instagram</a></li>
               <li><a href="#" className="hover:text-white">Facebook</a></li>
               <li><a href="#" className="hover:text-white">Twitter</a></li>
+              <li><Link to="/seller/register" className="hover:text-white">Đăng ký Seller</Link></li>
             </ul>
           </div>
         </div>

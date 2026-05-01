@@ -85,7 +85,7 @@ export default function SellerLayout({ children }) {
           </h2>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-              X\u00edn ch\u00e0o, {seller?.username || 'Kh\u00e1ch'}
+              Xin chào, {seller?.username || 'Kh\u00e1ch'}
             </span>
           </div>
         </div>

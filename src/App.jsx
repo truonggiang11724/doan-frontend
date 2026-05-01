@@ -42,6 +42,8 @@ import SellerProducts from './seller/pages/Products';
 import SellerOrders from './seller/pages/Orders';
 import SellerReviews from './seller/pages/Reviews';
 import SellerWallet from './seller/pages/Wallet';
+import SellerLogin from './seller/pages/SellerLogin';
+import SellerRegister from './seller/pages/SellerRegister';
 
 export default function App() {
   return (
@@ -137,6 +139,20 @@ export default function App() {
           } />
 
           {/* Seller Routes */}
+          <Route path="/seller/register" element={
+            <>
+              <Navbar />
+              <SellerRegister />
+              <Footer />
+            </>
+          } />
+          <Route path="/seller/login" element={
+            <>
+              <Navbar />
+              <SellerLogin />
+              <Footer />
+            </>
+          } />
           <Route path="/seller" element={
             <ProtectedSellerRoute>
               <SellerLayout>

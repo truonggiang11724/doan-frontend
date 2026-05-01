@@ -1,3 +1,5 @@
+import Table from "../../components/Table";
+
 const Sellers = () => {
   // Placeholder - implement when backend ready
   const sellers = [];

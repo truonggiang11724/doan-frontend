@@ -12,9 +12,9 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }, 
   }
 });
 
-export const register = createAsyncThunk('auth/register', async ({ username, email, password }, { rejectWithValue }) => {
+export const register = createAsyncThunk('auth/register', async ({ username, email, password, role, shop_name }, { rejectWithValue }) => {
   try {
-    const response = await api.post('/auth/register', { username, email, password });
+    const response = await api.post('/auth/register', { username, email, password, role, shop_name });
     return response.data;
   } catch (err) {
     return rejectWithValue(err?.response?.data || { message: 'Register failed' });
@@ -35,6 +35,7 @@ const authSlice = createSlice({
       state.token = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('seller');
     },
     setToken(state, action) {
       state.token = action.payload;
@@ -57,7 +58,14 @@ const authSlice = createSlice({
         
         const user = action.payload.user;
         state.user = user;
-        if (user) localStorage.setItem('user', JSON.stringify(user));
+        if (user) {
+          localStorage.setItem('user', JSON.stringify(user));
+          if (user.role === 'SELLER') {
+            localStorage.setItem('seller', JSON.stringify(user));
+          } else {
+            localStorage.removeItem('seller');
+          }
+        }
       })
       .addCase(login.rejected, (state, action) => {
         state.status = 'failed';

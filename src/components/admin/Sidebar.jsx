@@ -6,14 +6,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const menuItems = [
     { path: '/admin', label: 'Bảng điều khiển', icon: '📊' },
-    { path: '/admin/products', label: 'Sản phẩm', icon: '🛍️' },
+    { path: '/admin/users', label: 'Khách hàng', icon: '👥' },
+    { path: '/admin/sellers', label: 'Người bán', icon: '🏪' },
     { path: '/admin/categories', label: 'Danh mục', icon: '📂' },
-    { path: '/admin/orders', label: 'Đơn hàng', icon: '📦' },
-    { path: '/admin/users', label: 'Tài khoản', icon: '👥' },
-    { path: '/admin/sellers', label: 'Quản lý bán hàng', icon: '🏪' },
-    { path: '/admin/reviews', label: 'Đánh giá', icon: '⭐' },
     { path: '/admin/promotions', label: 'Khuyến mãi', icon: '🎉' },
-    { path: '/admin/wallets', label: 'Ví', icon: '💰' },
   ];
 
   return (
